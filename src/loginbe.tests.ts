@@ -13,3 +13,13 @@ describe("database", () => {
     expect(table).toBeDefined();
   });
 });
+
+it("should insert a new user", () => {
+  const db = createDb(":memory:");
+
+  const result = db
+    .prepare("INSERT INTO users (email, password) VALUES (?, ?)")
+    .run("test@example.com", "hashedpassword123");
+
+  expect(result.changes).toBe(1);
+});
