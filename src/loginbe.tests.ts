@@ -139,4 +139,12 @@ describe("register", () => {
       "Invalid email"
     );
   });
+
+  it("should throw if the password is too short", async () => {
+    const db = createDb(":memory:");
+
+    await expect(register(db, "test@example.com", "abc")).rejects.toThrow(
+      "Password must be at least 8 characters"
+    );
+  });
 });
