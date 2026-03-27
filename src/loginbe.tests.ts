@@ -57,4 +57,26 @@ describe("database", () => {
     expect(user.password).not.toBe(plaintext);
     expect(await bcrypt.compare(plaintext, user.password)).toBe(true);
   });
+
+  it("should retrieve a user by email", () => {
+    const db = createDb(":memory:");
+
+    db.prepare("INSERT INTO users (email, password) VALUES (?, ?)").run(
+      "test@example.com",
+      "hashedpassword123"
+    );
+
+    const user = db
+      .prepare("SELECT * FROM users WHERE email = ?")
+      .get("test@example.com") as {
+      id: number;
+      email: string;
+      password: string;
+      created_at: string;
+    };
+
+    expect(user).toBeDefined();
+    expect(user.email).toBe("test@example.com");
+    expect(user.id).toBe(1);
+  });
 });
