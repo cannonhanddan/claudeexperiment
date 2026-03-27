@@ -1,5 +1,6 @@
 import { createDb } from "./db";
 import bcrypt from "bcryptjs";
+import { register } from "./auth";
 
 describe("database", () => {
   it("should create a users table", () => {
@@ -108,5 +109,16 @@ describe("database", () => {
 
     expect(user).toBeDefined();
     expect((user as any).password).toBeUndefined();
+  });
+});
+
+describe("register", () => {
+  it("should register a new user", async () => {
+    const db = createDb(":memory:");
+
+    const user = await register(db, "test@example.com", "supersecret");
+
+    expect(user.email).toBe("test@example.com");
+    expect(user.id).toBeDefined();
   });
 });
