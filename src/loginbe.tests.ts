@@ -1,4 +1,5 @@
 import { createDb } from "./db";
+import bcrypt from "bcryptjs";
 
 describe("database", () => {
   it("should create a users table", () => {
@@ -12,30 +13,48 @@ describe("database", () => {
 
     expect(table).toBeDefined();
   });
-});
+  it("should insert a new user", () => {
+    const db = createDb(":memory:");
 
-it("should insert a new user", () => {
-  const db = createDb(":memory:");
+    const result = db
+      .prepare("INSERT INTO users (email, password) VALUES (?, ?)")
+      .run("test@example.com", "hashedpassword123");
 
-  const result = db
-    .prepare("INSERT INTO users (email, password) VALUES (?, ?)")
-    .run("test@example.com", "hashedpassword123");
+    expect(result.changes).toBe(1);
+  });
 
-  expect(result.changes).toBe(1);
-});
+  it("should reject a duplicate email", () => {
+    const db = createDb(":memory:");
 
-it("should reject a duplicate email", () => {
-  const db = createDb(":memory:");
-
-  db.prepare("INSERT INTO users (email, password) VALUES (?, ?)").run(
-    "test@example.com",
-    "hashedpassword123"
-  );
-
-  expect(() => {
     db.prepare("INSERT INTO users (email, password) VALUES (?, ?)").run(
       "test@example.com",
-      "anotherpassword"
+      "hashedpassword123"
     );
-  }).toThrow();
+
+    expect(() => {
+      db.prepare("INSERT INTO users (email, password) VALUES (?, ?)").run(
+        "test@example.com",
+        "anotherpassword"
+      );
+    }).toThrow();
+  });
+
+  it("should store a hashed password", async () => {
+    const db = createDb(":memory:");
+
+    const plaintext = "supersecret";
+    const hash = await bcrypt.hash(plaintext, 10);
+
+    db.prepare("INSERT INTO users (email, password) VALUES (?, ?)").run(
+      "test@example.com",
+      hash
+    );
+
+    const user = db
+      .prepare("SELECT password FROM users WHERE email = ?")
+      .get("test@example.com") as { password: string };
+
+    expect(user.password).not.toBe(plaintext);
+    expect(await bcrypt.compare(plaintext, user.password)).toBe(true);
+  });
 });
