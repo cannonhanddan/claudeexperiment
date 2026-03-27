@@ -121,4 +121,14 @@ describe("register", () => {
     expect(user.email).toBe("test@example.com");
     expect(user.id).toBeDefined();
   });
+
+  it("should throw if the email is already taken", async () => {
+    const db = createDb(":memory:");
+
+    await register(db, "test@example.com", "supersecret");
+
+    await expect(
+      register(db, "test@example.com", "anotherpassword")
+    ).rejects.toThrow();
+  });
 });
