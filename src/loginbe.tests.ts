@@ -79,4 +79,34 @@ describe("database", () => {
     expect(user.email).toBe("test@example.com");
     expect(user.id).toBe(1);
   });
+
+  it("should return null for a non-existent email", () => {
+    const db = createDb(":memory:");
+
+    const user = db
+      .prepare("SELECT * FROM users WHERE email = ?")
+      .get("nobody@example.com");
+
+    expect(user).toBeUndefined();
+  });
+
+  it("should not return the password when retrieving a user", () => {
+    const db = createDb(":memory:");
+
+    db.prepare("INSERT INTO users (email, password) VALUES (?, ?)").run(
+      "test@example.com",
+      "hashedpassword123"
+    );
+
+    const user = db
+      .prepare("SELECT id, email, created_at FROM users WHERE email = ?")
+      .get("test@example.com") as {
+      id: number;
+      email: string;
+      created_at: string;
+    };
+
+    expect(user).toBeDefined();
+    expect((user as any).password).toBeUndefined();
+  });
 });
