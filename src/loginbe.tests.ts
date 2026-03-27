@@ -148,15 +148,41 @@ describe("register", () => {
     );
   });
 
-  describe("login", () => {
-    it("should login with valid credentials", async () => {
-      const db = createDb(":memory:");
+});
 
-      await register(db, "test@example.com", "supersecret");
-      const user = await login(db, "test@example.com", "supersecret");
+describe("login", () => {
+  it("should login with valid credentials", async () => {
+    const db = createDb(":memory:");
 
-      expect(user.email).toBe("test@example.com");
-      expect(user.id).toBeDefined();
-    });
+    await register(db, "test@example.com", "supersecret");
+    const user = await login(db, "test@example.com", "supersecret");
+
+    expect(user.email).toBe("test@example.com");
+    expect(user.id).toBeDefined();
+  });
+
+  it("should throw on wrong password", async () => {
+    const db = createDb(":memory:");
+
+    await register(db, "test@example.com", "supersecret");
+
+    await expect(login(db, "test@example.com", "wrongpassword"))
+      .rejects.toThrow("Invalid email or password");
+  });
+
+  it("should throw on unknown email", async () => {
+    const db = createDb(":memory:");
+
+    await expect(login(db, "nobody@example.com", "supersecret"))
+      .rejects.toThrow("Invalid email or password");
+  });
+
+  it("should not return the password", async () => {
+    const db = createDb(":memory:");
+
+    await register(db, "test@example.com", "supersecret");
+    const user = await login(db, "test@example.com", "supersecret") as any;
+
+    expect(user.password).toBeUndefined();
   });
 });
