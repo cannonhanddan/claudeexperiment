@@ -6,6 +6,10 @@ export async function register(
   email: string,
   password: string
 ): Promise<{ id: number; email: string }> {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new Error("Invalid email");
+  }
+
   const hash = await bcrypt.hash(password, 10);
 
   const result = db

@@ -131,4 +131,12 @@ describe("register", () => {
       register(db, "test@example.com", "anotherpassword")
     ).rejects.toThrow();
   });
+
+  it("should throw if the email is invalid", async () => {
+    const db = createDb(":memory:");
+
+    await expect(register(db, "notanemail", "supersecret")).rejects.toThrow(
+      "Invalid email"
+    );
+  });
 });
