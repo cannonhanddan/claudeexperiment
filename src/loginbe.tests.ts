@@ -1,6 +1,6 @@
 import { createDb } from "./db";
 import bcrypt from "bcryptjs";
-import { register } from "./auth";
+import { register, login } from "./auth";
 
 describe("database", () => {
   it("should create a users table", () => {
@@ -146,5 +146,17 @@ describe("register", () => {
     await expect(register(db, "test@example.com", "abc")).rejects.toThrow(
       "Password must be at least 8 characters"
     );
+  });
+
+  describe("login", () => {
+    it("should login with valid credentials", async () => {
+      const db = createDb(":memory:");
+
+      await register(db, "test@example.com", "supersecret");
+      const user = await login(db, "test@example.com", "supersecret");
+
+      expect(user.email).toBe("test@example.com");
+      expect(user.id).toBeDefined();
+    });
   });
 });

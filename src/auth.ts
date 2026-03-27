@@ -22,3 +22,25 @@ export async function register(
 
   return { id: result.lastInsertRowid as number, email };
 }
+
+export async function login(
+  db: Database.Database,
+  email: string,
+  password: string
+): Promise<{ id: number; email: string }> {
+  const user = db
+    .prepare("SELECT id, email, password FROM users WHERE email = ?")
+    .get(email) as { id: number; email: string; password: string } | undefined;
+
+  if (!user) {
+    throw new Error("Invalid email or password");
+  }
+
+  const valid = await bcrypt.compare(password, user.password);
+
+  if (!valid) {
+    throw new Error("Invalid email or password");
+  }
+
+  return { id: user.id, email: user.email };
+}
